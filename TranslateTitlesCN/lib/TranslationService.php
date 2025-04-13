@@ -5,6 +5,9 @@ class TranslationService {
     private $googleBaseUrl;
     private $libreBaseUrl;
     private $libreApiKey;
+    private $openaiApiUrl;
+    private $openaiApiKey;
+    private $openaiModel;
 
     public function __construct($serviceType) {
         $this->serviceType = $serviceType;
@@ -12,6 +15,9 @@ class TranslationService {
         $this->googleBaseUrl = 'https://translate.googleapis.com/translate_a/single';
         $this->libreBaseUrl = FreshRSS_Context::$user_conf->LibreApiUrl;
         $this->libreApiKey = FreshRSS_Context::$user_conf->LibreApiKey;
+        $this->openaiApiUrl = FreshRSS_Context::$user_conf->OpenaiApiUrl;
+        $this->openaiApiKey = FreshRSS_Context::$user_conf->OpenaiApiKey;
+        $this->openaiModel = FreshRSS_Context::$user_conf->OpenaiModel;
     }
 
     public function translate($text) {
@@ -20,6 +26,8 @@ class TranslationService {
                 return $this->translateWithDeeplx($text);
             case 'libre':
                 return $this->translateWithLibre($text);
+            case 'openai':
+                return $this->translateWithOpenAI($text);
             default:
                 return $this->translateWithGoogle($text);
         }
@@ -203,5 +211,93 @@ class TranslationService {
         }
 
         return $translatedText;
+    }
+
+    private function translateWithOpenAI($text) {
+        if (empty($text)) {
+            return '';
+        }
+
+        if (empty($this->openaiApiKey)) {
+            error_log("OpenAI API key is not set");
+            return $text;
+        }
+
+        $apiUrl = rtrim($this->openaiApiUrl, '/') . '/v1/chat/completions';
+        
+        $postData = array(
+            'model' => $this->openaiModel,
+            'messages' => array(
+                array(
+                    'role' => 'system',
+                    'content' => '你是一个专业的翻译助手，请将以下文本翻译成中文，只返回翻译结果，不要添加任何其他内容。'
+                ),
+                array(
+                    'role' => 'user',
+                    'content' => $text
+                )
+            ),
+            'temperature' => 0.3
+        );
+
+        $jsonData = json_encode($postData);
+        
+        error_log("OpenAI Request URL: " . $apiUrl);
+        error_log("OpenAI Request Data: " . $jsonData);
+
+        $options = array(
+            'http' => array(
+                'header' => array(
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $this->openaiApiKey,
+                    'Content-Length: ' . strlen($jsonData)
+                ),
+                'method' => 'POST',
+                'content' => $jsonData,
+                'timeout' => 10,
+                'ignore_errors' => true
+            ),
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+
+        $context = stream_context_create($options);
+
+        try {
+            $result = @file_get_contents($apiUrl, false, $context);
+            
+            $responseHeaders = $http_response_header ?? array();
+            $statusLine = $responseHeaders[0] ?? '';
+            error_log("OpenAI Response Status: " . $statusLine);
+            
+            if ($result === FALSE) {
+                error_log("OpenAI API request failed - No Response");
+                return $text;
+            }
+
+            error_log("OpenAI Raw Response: " . $result);
+            
+            $response = json_decode($result, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("OpenAI JSON decode error: " . json_last_error_msg());
+                return $text;
+            }
+
+            if (isset($response['choices'][0]['message']['content'])) {
+                return trim($response['choices'][0]['message']['content']);
+            } else if (isset($response['error'])) {
+                error_log("OpenAI API error: " . $response['error']['message']);
+                return $text;
+            } else {
+                error_log("OpenAI API unexpected response structure: " . print_r($response, true));
+                return $text;
+            }
+        } catch (Exception $e) {
+            error_log("OpenAI exception: " . $e->getMessage());
+            return $text;
+        }
     }
 }
