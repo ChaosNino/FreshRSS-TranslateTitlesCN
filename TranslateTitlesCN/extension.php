@@ -4,6 +4,8 @@ require_once('lib/TranslateController.php');
 class TranslateTitlesExtension extends Minz_Extension {
     // 默认DeepLX API 地址
     private const ApiUrl = 'http://localhost:1188/translate';
+    // 默认OpenAI API 地址
+    private const OpenaiApiUrl = 'https://api.openai.com';
 
     public function init() {
         error_log('TranslateTitlesCN: Plugin initializing...');
@@ -42,6 +44,18 @@ class TranslateTitlesExtension extends Minz_Extension {
             FreshRSS_Context::$user_conf->LibreApiKey = '';
         }
 
+        if (is_null(FreshRSS_Context::$user_conf->OpenaiApiUrl)) {
+            FreshRSS_Context::$user_conf->OpenaiApiUrl = self::OpenaiApiUrl;
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->OpenaiApiKey)) {
+            FreshRSS_Context::$user_conf->OpenaiApiKey = '';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->OpenaiModel)) {
+            FreshRSS_Context::$user_conf->OpenaiModel = 'gpt-3.5-turbo';
+        }
+
         FreshRSS_Context::$user_conf->save();
 
         error_log('TranslateTitlesCN: Hooks registered');
@@ -74,6 +88,15 @@ class TranslateTitlesExtension extends Minz_Extension {
             $libreApiKey = Minz_Request::param('LibreApiKey', '');
             FreshRSS_Context::$user_conf->LibreApiKey = $libreApiKey;
 
+            $openaiApiUrl = Minz_Request::param('OpenaiApiUrl', self::OpenaiApiUrl);
+            FreshRSS_Context::$user_conf->OpenaiApiUrl = $openaiApiUrl;
+
+            $openaiApiKey = Minz_Request::param('OpenaiApiKey', '');
+            FreshRSS_Context::$user_conf->OpenaiApiKey = $openaiApiKey;
+
+            $openaiModel = Minz_Request::param('OpenaiModel', 'gpt-3.5-turbo');
+            FreshRSS_Context::$user_conf->OpenaiModel = $openaiModel;
+
             // 保存并记录结果
             $saveResult = FreshRSS_Context::$user_conf->save();
             error_log("TranslateTitlesCN: Config save result: " . ($saveResult ? 'success' : 'failed'));
@@ -100,6 +123,15 @@ class TranslateTitlesExtension extends Minz_Extension {
         }
         if (isset(FreshRSS_Context::$user_conf->LibreApiKey)) {
             unset(FreshRSS_Context::$user_conf->LibreApiKey);
+        }
+        if (isset(FreshRSS_Context::$user_conf->OpenaiApiUrl)) {
+            unset(FreshRSS_Context::$user_conf->OpenaiApiUrl);
+        }
+        if (isset(FreshRSS_Context::$user_conf->OpenaiApiKey)) {
+            unset(FreshRSS_Context::$user_conf->OpenaiApiKey);
+        }
+        if (isset(FreshRSS_Context::$user_conf->OpenaiModel)) {
+            unset(FreshRSS_Context::$user_conf->OpenaiModel);
         }
         FreshRSS_Context::$user_conf->save();
     }
