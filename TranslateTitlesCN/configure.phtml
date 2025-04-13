@@ -16,6 +16,10 @@
                 <input type="radio" id="translate-service-libre" name="TranslateService" value="libre" <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'libre' ? 'checked' : ''); ?>>
                 <span for="translate-service-libre">LibreTranslate</span>
             </div>
+            <div class="form-group">
+                <input type="radio" id="translate-service-openai" name="TranslateService" value="openai" <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'openai' ? 'checked' : ''); ?>>
+                <span for="translate-service-openai">OpenAI</span>
+            </div>
         </div>
     </div>
 
@@ -38,6 +42,26 @@
         <label class="group-name" for="libre-api-key">LibreTranslate API Key (可选):</label>
         <div class="group-controls">
             <input id="libre-api-key" name="LibreApiKey" type="text" value="<?php echo FreshRSS_Context::$user_conf->LibreApiKey; ?>">
+        </div>
+    </div>
+
+    <!-- OpenAI 设置 -->
+    <div class="form-group">
+        <label class="group-name" for="openai-api-url">OpenAI API地址:</label>
+        <div class="group-controls">
+            <input id="openai-api-url" name="OpenaiApiUrl" type="text" value="<?php echo FreshRSS_Context::$user_conf->OpenaiApiUrl; ?>">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="group-name" for="openai-api-key">OpenAI API Key:</label>
+        <div class="group-controls">
+            <input id="openai-api-key" name="OpenaiApiKey" type="password" value="<?php echo FreshRSS_Context::$user_conf->OpenaiApiKey; ?>">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="group-name" for="openai-model">OpenAI 模型:</label>
+        <div class="group-controls">
+            <input id="openai-model" name="OpenaiModel" type="text" value="<?php echo FreshRSS_Context::$user_conf->OpenaiModel; ?>">
         </div>
     </div>
 
