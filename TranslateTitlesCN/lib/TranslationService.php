@@ -8,6 +8,14 @@ class TranslationService {
     private $openaiApiUrl;
     private $openaiApiKey;
     private $openaiModel;
+    private $aiProvider;
+    private $aiPrompt;
+    private $geminiApiKey;
+    private $geminiModel;
+    private $grokApiKey;
+    private $grokModel;
+    private $deepseekApiKey;
+    private $deepseekModel;
 
     public function __construct($serviceType) {
         $this->serviceType = $serviceType;
@@ -18,6 +26,14 @@ class TranslationService {
         $this->openaiApiUrl = FreshRSS_Context::$user_conf->OpenaiApiUrl;
         $this->openaiApiKey = FreshRSS_Context::$user_conf->OpenaiApiKey;
         $this->openaiModel = FreshRSS_Context::$user_conf->OpenaiModel;
+        $this->aiProvider = FreshRSS_Context::$user_conf->AiProvider;
+        $this->aiPrompt = FreshRSS_Context::$user_conf->AiPrompt;
+        $this->geminiApiKey = FreshRSS_Context::$user_conf->GeminiApiKey;
+        $this->geminiModel = FreshRSS_Context::$user_conf->GeminiModel;
+        $this->grokApiKey = FreshRSS_Context::$user_conf->GrokApiKey;
+        $this->grokModel = FreshRSS_Context::$user_conf->GrokModel;
+        $this->deepseekApiKey = FreshRSS_Context::$user_conf->DeepseekApiKey;
+        $this->deepseekModel = FreshRSS_Context::$user_conf->DeepseekModel;
     }
 
     public function translate($text) {
@@ -26,10 +42,217 @@ class TranslationService {
                 return $this->translateWithDeeplx($text);
             case 'libre':
                 return $this->translateWithLibre($text);
-            case 'openai':
-                return $this->translateWithOpenAI($text);
+            case 'ai':
+                return $this->translateWithAI($text);
             default:
                 return $this->translateWithGoogle($text);
+        }
+    }
+
+    private function translateWithAI($text) {
+        switch ($this->aiProvider) {
+            case 'openai':
+                return $this->translateWithOpenAI($text);
+            case 'gemini':
+                return $this->translateWithGemini($text);
+            case 'grok':
+                return $this->translateWithGrok($text);
+            case 'deepseek':
+                return $this->translateWithDeepseek($text);
+            default:
+                return $this->translateWithOpenAI($text);
+        }
+    }
+
+    private function translateWithGemini($text) {
+        if (empty($text)) {
+            return '';
+        }
+
+        if (empty($this->geminiApiKey)) {
+            error_log("Gemini API key is not set");
+            return $text;
+        }
+
+        $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' . $this->geminiModel . ':generateContent';
+        
+        $postData = array(
+            'contents' => array(
+                array(
+                    'parts' => array(
+                        array(
+                            'text' => $this->aiPrompt . "\n\n" . $text
+                        )
+                    )
+                )
+            )
+        );
+
+        $jsonData = json_encode($postData);
+        
+        error_log("Gemini Request URL: " . $apiUrl);
+        error_log("Gemini Request Data: " . $jsonData);
+
+        $options = array(
+            'http' => array(
+                'header' => array(
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($jsonData),
+                    'x-goog-api-key: ' . $this->geminiApiKey
+                ),
+                'method' => 'POST',
+                'content' => $jsonData,
+                'timeout' => 10
+            )
+        );
+
+        $context = stream_context_create($options);
+
+        try {
+            $result = @file_get_contents($apiUrl, false, $context);
+            if ($result === FALSE) {
+                throw new Exception("Failed to get content from Gemini API");
+            }
+
+            $response = json_decode($result, true);
+            if (isset($response['candidates'][0]['content']['parts'][0]['text'])) {
+                return $response['candidates'][0]['content']['parts'][0]['text'];
+            } else {
+                throw new Exception("Gemini API returned unexpected response structure");
+            }
+        } catch (Exception $e) {
+            error_log("Gemini translation error: " . $e->getMessage());
+            return $text;
+        }
+    }
+
+    private function translateWithGrok($text) {
+        if (empty($text)) {
+            return '';
+        }
+
+        if (empty($this->grokApiKey)) {
+            error_log("Grok API key is not set");
+            return $text;
+        }
+
+        $apiUrl = 'https://api.grok.x.ai/v1/chat/completions';
+        
+        $postData = array(
+            'model' => $this->grokModel,
+            'messages' => array(
+                array(
+                    'role' => 'system',
+                    'content' => $this->aiPrompt
+                ),
+                array(
+                    'role' => 'user',
+                    'content' => $text
+                )
+            ),
+            'temperature' => 0.3
+        );
+
+        $jsonData = json_encode($postData);
+        
+        error_log("Grok Request URL: " . $apiUrl);
+        error_log("Grok Request Data: " . $jsonData);
+
+        $options = array(
+            'http' => array(
+                'header' => array(
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($jsonData),
+                    'Authorization: Bearer ' . $this->grokApiKey
+                ),
+                'method' => 'POST',
+                'content' => $jsonData,
+                'timeout' => 10
+            )
+        );
+
+        $context = stream_context_create($options);
+
+        try {
+            $result = @file_get_contents($apiUrl, false, $context);
+            if ($result === FALSE) {
+                throw new Exception("Failed to get content from Grok API");
+            }
+
+            $response = json_decode($result, true);
+            if (isset($response['choices'][0]['message']['content'])) {
+                return $response['choices'][0]['message']['content'];
+            } else {
+                throw new Exception("Grok API returned unexpected response structure");
+            }
+        } catch (Exception $e) {
+            error_log("Grok translation error: " . $e->getMessage());
+            return $text;
+        }
+    }
+
+    private function translateWithDeepseek($text) {
+        if (empty($text)) {
+            return '';
+        }
+
+        if (empty($this->deepseekApiKey)) {
+            error_log("Deepseek API key is not set");
+            return $text;
+        }
+
+        $apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+        
+        $postData = array(
+            'model' => $this->deepseekModel,
+            'messages' => array(
+                array(
+                    'role' => 'system',
+                    'content' => $this->aiPrompt
+                ),
+                array(
+                    'role' => 'user',
+                    'content' => $text
+                )
+            ),
+            'temperature' => 0.3
+        );
+
+        $jsonData = json_encode($postData);
+        
+        error_log("Deepseek Request URL: " . $apiUrl);
+        error_log("Deepseek Request Data: " . $jsonData);
+
+        $options = array(
+            'http' => array(
+                'header' => array(
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($jsonData),
+                    'Authorization: Bearer ' . $this->deepseekApiKey
+                ),
+                'method' => 'POST',
+                'content' => $jsonData,
+                'timeout' => 10
+            )
+        );
+
+        $context = stream_context_create($options);
+
+        try {
+            $result = @file_get_contents($apiUrl, false, $context);
+            if ($result === FALSE) {
+                throw new Exception("Failed to get content from Deepseek API");
+            }
+
+            $response = json_decode($result, true);
+            if (isset($response['choices'][0]['message']['content'])) {
+                return $response['choices'][0]['message']['content'];
+            } else {
+                throw new Exception("Deepseek API returned unexpected response structure");
+            }
+        } catch (Exception $e) {
+            error_log("Deepseek translation error: " . $e->getMessage());
+            return $text;
         }
     }
 
@@ -230,7 +453,7 @@ class TranslationService {
             'messages' => array(
                 array(
                     'role' => 'system',
-                    'content' => '你是一个专业的翻译助手，请将以下文本翻译成中文，只返回翻译结果，不要添加任何其他内容。'
+                    'content' => $this->aiPrompt
                 ),
                 array(
                     'role' => 'user',
@@ -249,18 +472,12 @@ class TranslationService {
             'http' => array(
                 'header' => array(
                     'Content-Type: application/json',
-                    'Authorization: Bearer ' . $this->openaiApiKey,
-                    'Content-Length: ' . strlen($jsonData)
+                    'Content-Length: ' . strlen($jsonData),
+                    'Authorization: Bearer ' . $this->openaiApiKey
                 ),
                 'method' => 'POST',
                 'content' => $jsonData,
-                'timeout' => 10,
-                'ignore_errors' => true
-            ),
-            'ssl' => array(
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'allow_self_signed' => true
+                'timeout' => 10
             )
         );
 
@@ -268,35 +485,18 @@ class TranslationService {
 
         try {
             $result = @file_get_contents($apiUrl, false, $context);
-            
-            $responseHeaders = $http_response_header ?? array();
-            $statusLine = $responseHeaders[0] ?? '';
-            error_log("OpenAI Response Status: " . $statusLine);
-            
             if ($result === FALSE) {
-                error_log("OpenAI API request failed - No Response");
-                return $text;
+                throw new Exception("Failed to get content from OpenAI API");
             }
 
-            error_log("OpenAI Raw Response: " . $result);
-            
             $response = json_decode($result, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log("OpenAI JSON decode error: " . json_last_error_msg());
-                return $text;
-            }
-
             if (isset($response['choices'][0]['message']['content'])) {
-                return trim($response['choices'][0]['message']['content']);
-            } else if (isset($response['error'])) {
-                error_log("OpenAI API error: " . $response['error']['message']);
-                return $text;
+                return $response['choices'][0]['message']['content'];
             } else {
-                error_log("OpenAI API unexpected response structure: " . print_r($response, true));
-                return $text;
+                throw new Exception("OpenAI API returned unexpected response structure");
             }
         } catch (Exception $e) {
-            error_log("OpenAI exception: " . $e->getMessage());
+            error_log("OpenAI translation error: " . $e->getMessage());
             return $text;
         }
     }
