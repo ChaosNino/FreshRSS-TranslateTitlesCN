@@ -17,14 +17,14 @@
                 <span for="translate-service-libre">LibreTranslate</span>
             </div>
             <div class="form-group">
-                <input type="radio" id="translate-service-openai" name="TranslateService" value="openai" <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'openai' ? 'checked' : ''); ?>>
-                <span for="translate-service-openai">OpenAI</span>
+                <input type="radio" id="translate-service-ai" name="TranslateService" value="ai" <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'ai' ? 'checked' : ''); ?>>
+                <span for="translate-service-ai">AI翻译</span>
             </div>
         </div>
     </div>
 
     <!-- DeepLX API URL 设置 -->
-    <div class="form-group">
+    <div id="deeplx-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'deeplx' ? 'block' : 'none'); ?>">
         <label class="group-name" for="deeplx-api-url">DeepLX API地址:</label>
         <div class="group-controls">
             <input id="deeplx-api-url" name="DeeplxApiUrl" type="text" value="<?php echo FreshRSS_Context::$user_conf->DeeplxApiUrl; ?>">
@@ -32,36 +32,98 @@
     </div>
 
     <!-- LibreTranslate 设置 -->
-    <div class="form-group">
+    <div id="libre-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'libre' ? 'block' : 'none'); ?>">
         <label class="group-name" for="libre-api-url">LibreTranslate 服务器地址:</label>
         <div class="group-controls">
             <input id="libre-api-url" name="LibreApiUrl" type="text" value="<?php echo FreshRSS_Context::$user_conf->LibreApiUrl; ?>">
         </div>
-    </div>
-    <div class="form-group">
-        <label class="group-name" for="libre-api-key">LibreTranslate API Key (可选):</label>
-        <div class="group-controls">
-            <input id="libre-api-key" name="LibreApiKey" type="text" value="<?php echo FreshRSS_Context::$user_conf->LibreApiKey; ?>">
+        <div class="form-group">
+            <label class="group-name" for="libre-api-key">LibreTranslate API Key (可选):</label>
+            <div class="group-controls">
+                <input id="libre-api-key" name="LibreApiKey" type="text" value="<?php echo FreshRSS_Context::$user_conf->LibreApiKey; ?>">
+            </div>
         </div>
     </div>
 
-    <!-- OpenAI 设置 -->
-    <div class="form-group">
+    <!-- AI翻译设置 -->
+    <div id="ai-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->TranslateService == 'ai' ? 'block' : 'none'); ?>">
+        <label class="group-name">AI翻译设置:</label>
+        <div class="group-controls">
+            <div class="form-group">
+                <label for="ai-provider">选择AI供应商:</label>
+                <select id="ai-provider" name="AiProvider">
+                    <option value="openai" <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'openai' ? 'selected' : ''); ?>>OpenAI</option>
+                    <option value="gemini" <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'gemini' ? 'selected' : ''); ?>>Gemini</option>
+                    <option value="grok" <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'grok' ? 'selected' : ''); ?>>Grok</option>
+                    <option value="deepseek" <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'deepseek' ? 'selected' : ''); ?>>DeepSeek</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ai-prompt">自定义翻译提示词:</label>
+                <textarea id="ai-prompt" name="AiPrompt" rows="3"><?php echo FreshRSS_Context::$user_conf->AiPrompt ?? '你是一个专业的翻译助手，请将以下文本翻译成中文，只返回翻译结果，不要添加任何其他内容。'; ?></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- OpenAI 设置 (仅在选择OpenAI时显示) -->
+    <div id="openai-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'openai' ? 'block' : 'none'); ?>">
         <label class="group-name" for="openai-api-url">OpenAI API地址:</label>
         <div class="group-controls">
             <input id="openai-api-url" name="OpenaiApiUrl" type="text" value="<?php echo FreshRSS_Context::$user_conf->OpenaiApiUrl; ?>">
         </div>
-    </div>
-    <div class="form-group">
-        <label class="group-name" for="openai-api-key">OpenAI API Key:</label>
-        <div class="group-controls">
-            <input id="openai-api-key" name="OpenaiApiKey" type="password" value="<?php echo FreshRSS_Context::$user_conf->OpenaiApiKey; ?>">
+        <div class="form-group">
+            <label class="group-name" for="openai-api-key">OpenAI API Key:</label>
+            <div class="group-controls">
+                <input id="openai-api-key" name="OpenaiApiKey" type="password" value="<?php echo FreshRSS_Context::$user_conf->OpenaiApiKey; ?>">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="group-name" for="openai-model">OpenAI 模型:</label>
+            <div class="group-controls">
+                <input id="openai-model" name="OpenaiModel" type="text" value="<?php echo FreshRSS_Context::$user_conf->OpenaiModel; ?>">
+            </div>
         </div>
     </div>
-    <div class="form-group">
-        <label class="group-name" for="openai-model">OpenAI 模型:</label>
+
+    <!-- Gemini 设置 -->
+    <div id="gemini-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'gemini' ? 'block' : 'none'); ?>">
+        <label class="group-name" for="gemini-api-key">Gemini API Key:</label>
         <div class="group-controls">
-            <input id="openai-model" name="OpenaiModel" type="text" value="<?php echo FreshRSS_Context::$user_conf->OpenaiModel; ?>">
+            <input id="gemini-api-key" name="GeminiApiKey" type="password" value="<?php echo FreshRSS_Context::$user_conf->GeminiApiKey; ?>">
+        </div>
+        <div class="form-group">
+            <label class="group-name" for="gemini-model">Gemini 模型:</label>
+            <div class="group-controls">
+                <input id="gemini-model" name="GeminiModel" type="text" value="<?php echo FreshRSS_Context::$user_conf->GeminiModel ?? 'gemini-pro'; ?>">
+            </div>
+        </div>
+    </div>
+
+    <!-- Grok 设置 -->
+    <div id="grok-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'grok' ? 'block' : 'none'); ?>">
+        <label class="group-name" for="grok-api-key">Grok API Key:</label>
+        <div class="group-controls">
+            <input id="grok-api-key" name="GrokApiKey" type="password" value="<?php echo FreshRSS_Context::$user_conf->GrokApiKey; ?>">
+        </div>
+        <div class="form-group">
+            <label class="group-name" for="grok-model">Grok 模型:</label>
+            <div class="group-controls">
+                <input id="grok-model" name="GrokModel" type="text" value="<?php echo FreshRSS_Context::$user_conf->GrokModel ?? 'grok-1'; ?>">
+            </div>
+        </div>
+    </div>
+
+    <!-- DeepSeek 设置 -->
+    <div id="deepseek-settings" class="form-group" style="display: <?php echo (FreshRSS_Context::$user_conf->AiProvider == 'deepseek' ? 'block' : 'none'); ?>">
+        <label class="group-name" for="deepseek-api-key">DeepSeek API Key:</label>
+        <div class="group-controls">
+            <input id="deepseek-api-key" name="DeepseekApiKey" type="password" value="<?php echo FreshRSS_Context::$user_conf->DeepseekApiKey; ?>">
+        </div>
+        <div class="form-group">
+            <label class="group-name" for="deepseek-model">DeepSeek 模型:</label>
+            <div class="group-controls">
+                <input id="deepseek-model" name="DeepseekModel" type="text" value="<?php echo FreshRSS_Context::$user_conf->DeepseekModel ?? 'deepseek-chat'; ?>">
+            </div>
         </div>
     </div>
 
@@ -92,3 +154,82 @@
         </div>
     </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 翻译服务选择相关元素
+    const translateServiceInputs = document.querySelectorAll('input[name="TranslateService"]');
+    const deeplxSettings = document.getElementById('deeplx-settings');
+    const libreSettings = document.getElementById('libre-settings');
+    const aiSettings = document.getElementById('ai-settings');
+
+    // AI供应商相关元素
+    const aiProviderSelect = document.getElementById('ai-provider');
+    const openaiSettings = document.getElementById('openai-settings');
+    const geminiSettings = document.getElementById('gemini-settings');
+    const grokSettings = document.getElementById('grok-settings');
+    const deepseekSettings = document.getElementById('deepseek-settings');
+
+    // 更新翻译服务设置的显示状态
+    function updateTranslateServiceSettings() {
+        const selectedService = document.querySelector('input[name="TranslateService"]:checked').value;
+        
+        // 隐藏所有设置
+        deeplxSettings.style.display = 'none';
+        libreSettings.style.display = 'none';
+        aiSettings.style.display = 'none';
+        
+        // 显示选中的设置
+        switch(selectedService) {
+            case 'deeplx':
+                deeplxSettings.style.display = 'block';
+                break;
+            case 'libre':
+                libreSettings.style.display = 'block';
+                break;
+            case 'ai':
+                aiSettings.style.display = 'block';
+                updateAiProviderSettings();
+                break;
+        }
+    }
+
+    // 更新AI供应商设置的显示状态
+    function updateAiProviderSettings() {
+        const selectedProvider = aiProviderSelect.value;
+        
+        // 隐藏所有AI设置
+        openaiSettings.style.display = 'none';
+        geminiSettings.style.display = 'none';
+        grokSettings.style.display = 'none';
+        deepseekSettings.style.display = 'none';
+        
+        // 显示选中的AI设置
+        switch(selectedProvider) {
+            case 'openai':
+                openaiSettings.style.display = 'block';
+                break;
+            case 'gemini':
+                geminiSettings.style.display = 'block';
+                break;
+            case 'grok':
+                grokSettings.style.display = 'block';
+                break;
+            case 'deepseek':
+                deepseekSettings.style.display = 'block';
+                break;
+        }
+    }
+
+    // 初始化显示状态
+    updateTranslateServiceSettings();
+
+    // 监听翻译服务选择变化
+    translateServiceInputs.forEach(input => {
+        input.addEventListener('change', updateTranslateServiceSettings);
+    });
+
+    // 监听AI供应商选择变化
+    aiProviderSelect.addEventListener('change', updateAiProviderSettings);
+});
+</script>
