@@ -32,6 +32,14 @@ class TranslateTitlesExtension extends Minz_Extension {
             FreshRSS_Context::$user_conf->TranslateService = 'google';
         }
 
+        if (is_null(FreshRSS_Context::$user_conf->AiProvider)) {
+            FreshRSS_Context::$user_conf->AiProvider = 'openai';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->AiPrompt)) {
+            FreshRSS_Context::$user_conf->AiPrompt = '你是一个专业的翻译助手，请将以下文本翻译成中文，只返回翻译结果，不要添加任何其他内容。';
+        }
+
         if (is_null(FreshRSS_Context::$user_conf->DeeplxApiUrl)) {
             FreshRSS_Context::$user_conf->DeeplxApiUrl = self::ApiUrl;
         }
@@ -54,6 +62,30 @@ class TranslateTitlesExtension extends Minz_Extension {
 
         if (is_null(FreshRSS_Context::$user_conf->OpenaiModel)) {
             FreshRSS_Context::$user_conf->OpenaiModel = 'gpt-3.5-turbo';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->GeminiApiKey)) {
+            FreshRSS_Context::$user_conf->GeminiApiKey = '';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->GeminiModel)) {
+            FreshRSS_Context::$user_conf->GeminiModel = 'gemini-pro';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->GrokApiKey)) {
+            FreshRSS_Context::$user_conf->GrokApiKey = '';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->GrokModel)) {
+            FreshRSS_Context::$user_conf->GrokModel = 'grok-1';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->DeepseekApiKey)) {
+            FreshRSS_Context::$user_conf->DeepseekApiKey = '';
+        }
+
+        if (is_null(FreshRSS_Context::$user_conf->DeepseekModel)) {
+            FreshRSS_Context::$user_conf->DeepseekModel = 'deepseek-chat';
         }
 
         FreshRSS_Context::$user_conf->save();
@@ -88,6 +120,12 @@ class TranslateTitlesExtension extends Minz_Extension {
             $libreApiKey = Minz_Request::param('LibreApiKey', '');
             FreshRSS_Context::$user_conf->LibreApiKey = $libreApiKey;
 
+            $aiProvider = Minz_Request::param('AiProvider', 'openai');
+            FreshRSS_Context::$user_conf->AiProvider = $aiProvider;
+
+            $aiPrompt = Minz_Request::param('AiPrompt', '');
+            FreshRSS_Context::$user_conf->AiPrompt = $aiPrompt;
+
             $openaiApiUrl = Minz_Request::param('OpenaiApiUrl', self::OpenaiApiUrl);
             FreshRSS_Context::$user_conf->OpenaiApiUrl = $openaiApiUrl;
 
@@ -96,6 +134,24 @@ class TranslateTitlesExtension extends Minz_Extension {
 
             $openaiModel = Minz_Request::param('OpenaiModel', 'gpt-3.5-turbo');
             FreshRSS_Context::$user_conf->OpenaiModel = $openaiModel;
+
+            $geminiApiKey = Minz_Request::param('GeminiApiKey', '');
+            FreshRSS_Context::$user_conf->GeminiApiKey = $geminiApiKey;
+
+            $geminiModel = Minz_Request::param('GeminiModel', 'gemini-pro');
+            FreshRSS_Context::$user_conf->GeminiModel = $geminiModel;
+
+            $grokApiKey = Minz_Request::param('GrokApiKey', '');
+            FreshRSS_Context::$user_conf->GrokApiKey = $grokApiKey;
+
+            $grokModel = Minz_Request::param('GrokModel', 'grok-1');
+            FreshRSS_Context::$user_conf->GrokModel = $grokModel;
+
+            $deepseekApiKey = Minz_Request::param('DeepseekApiKey', '');
+            FreshRSS_Context::$user_conf->DeepseekApiKey = $deepseekApiKey;
+
+            $deepseekModel = Minz_Request::param('DeepseekModel', 'deepseek-chat');
+            FreshRSS_Context::$user_conf->DeepseekModel = $deepseekModel;
 
             // 保存并记录结果
             $saveResult = FreshRSS_Context::$user_conf->save();
@@ -124,6 +180,12 @@ class TranslateTitlesExtension extends Minz_Extension {
         if (isset(FreshRSS_Context::$user_conf->LibreApiKey)) {
             unset(FreshRSS_Context::$user_conf->LibreApiKey);
         }
+        if (isset(FreshRSS_Context::$user_conf->AiProvider)) {
+            unset(FreshRSS_Context::$user_conf->AiProvider);
+        }
+        if (isset(FreshRSS_Context::$user_conf->AiPrompt)) {
+            unset(FreshRSS_Context::$user_conf->AiPrompt);
+        }
         if (isset(FreshRSS_Context::$user_conf->OpenaiApiUrl)) {
             unset(FreshRSS_Context::$user_conf->OpenaiApiUrl);
         }
@@ -132,6 +194,24 @@ class TranslateTitlesExtension extends Minz_Extension {
         }
         if (isset(FreshRSS_Context::$user_conf->OpenaiModel)) {
             unset(FreshRSS_Context::$user_conf->OpenaiModel);
+        }
+        if (isset(FreshRSS_Context::$user_conf->GeminiApiKey)) {
+            unset(FreshRSS_Context::$user_conf->GeminiApiKey);
+        }
+        if (isset(FreshRSS_Context::$user_conf->GeminiModel)) {
+            unset(FreshRSS_Context::$user_conf->GeminiModel);
+        }
+        if (isset(FreshRSS_Context::$user_conf->GrokApiKey)) {
+            unset(FreshRSS_Context::$user_conf->GrokApiKey);
+        }
+        if (isset(FreshRSS_Context::$user_conf->GrokModel)) {
+            unset(FreshRSS_Context::$user_conf->GrokModel);
+        }
+        if (isset(FreshRSS_Context::$user_conf->DeepseekApiKey)) {
+            unset(FreshRSS_Context::$user_conf->DeepseekApiKey);
+        }
+        if (isset(FreshRSS_Context::$user_conf->DeepseekModel)) {
+            unset(FreshRSS_Context::$user_conf->DeepseekModel);
         }
         FreshRSS_Context::$user_conf->save();
     }
